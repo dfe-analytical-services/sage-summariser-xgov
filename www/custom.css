@@ -1,0 +1,282 @@
+.shiny-notification {
+   height: 100px;
+   width: 400px;
+   position:fixed;
+   top: 50px;
+   left: calc(50% - 200px);
+   font-size: 22px;
+   font-family: "Roboto", sans-serif;
+   text-align: center;
+}
+
+.skin-blue .left-side, .skin-blue .main-sidebar, .skin-blue .wrapper  {
+  background: rgb(105,240,174);
+  background: linear-gradient(168deg, rgba(105,240,174,1) 0%, rgba(0,105,92,1) 100%);
+  background-attachment: fixed;
+}
+
+body .content-wrapper {
+  background-color: transparent;
+}
+
+.modal-content {
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.skin-blue .left-side, .skin-blue .main-sidebar, .skin-blue .wrapper {
+  background-color: transparent;
+}
+
+.selectize-control .single .selectize-input:after {
+  visibility: hidden;
+}
+
+.selectize-control.multi .selectize-input > div {
+  background: transparent;
+  font-size: 16px;
+}
+
+.form-control.selectize-control {
+  padding-left: 15px;
+  font-size: 16px;
+}
+
+.selectize-control .multi .selectize-input > div:active {
+  background: transparent;
+  color: black;
+}
+
+.selectize-input .items .has-options {
+  font-size: 16px;
+}
+
+/* Fonts */
+
+a {
+  color: #357DA7;
+}
+
+div {
+  font-family: "Roboto", sans-serif;
+}
+
+p {
+  font-family: "Roboto", sans-serif;
+  line-height: 1.5;
+}
+
+em {
+  font-family: "Roboto", sans-serif;
+}
+
+strong {
+  font-family: "Roboto", sans-serif;
+}
+
+li {
+  font-family: "Roboto", sans-serif;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  font-size: 16px;
+}
+
+.btn {
+  font-family: "Roboto", sans-serif;
+}
+
+.bttn {
+  font-family: "Roboto", sans-serif;
+}
+
+h1 {
+  font-family: "Open Sans", sans-serif;
+}
+
+h2 {
+  font-family: "Open Sans", sans-serif;
+  color: #00bfa5;
+  font-weight: bold;
+}
+
+h3 {
+  font-family: "Open Sans", sans-serif;
+  color: #FFF;
+  margin-top: 0;
+}
+
+h4 {
+  font-family: "Open Sans", sans-serif;
+}
+
+blockquote {
+    border-left: 5px solid rgb(216, 27, 96);
+}
+
+/* Sidebar */
+#sidebarCollapsed {
+  background-color: transparent;
+}
+
+.skin-blue .sidebar a {
+  color: #FFF;
+  background-color: transparent;
+}
+
+.skin-blue .sidebar-menu>li.active>a {
+  background-color: #00bfa5;
+  color: #FFF;
+  border-left: #FFF;
+}
+
+.skin-blue .sidebar-menu>li:hover>a {
+  background-color: #00bfa5;
+  color: #FFF;
+  border-left: #FFF;
+}
+
+/* Dropdown header button */
+.dropdown-menu {
+  width: 400px;
+}
+
+/* logo */
+.skin-blue .main-header .logo {
+  background-color: transparent;
+  color: #FFF;
+}
+
+/* logo when hovered */
+.skin-blue .main-header .logo:hover {
+  background-color: #00bfa5;
+  color: #FFFFFF;
+}
+
+
+/* navbar (rest of the header) */
+.skin-blue .main-header .navbar {
+  background-color: transparent;
+}
+
+/* Navbar button thing when hovered */
+.skin-blue .main-header .navbar .sidebar-toggle:hover {
+  background-color: #00bfa5;
+  color: #FFFFFF;
+}
+.skin-blue .main-header .navbar .sidebar-toggle{
+  background-color: transparent;
+  color: #FFF;
+}
+
+                                
+/* Jumbotron #26a1bd */
+.jumbotron {
+  /* background-image: linear-gradient(#f02731, #00bfa5); */
+  background-color: #00695c;
+  box-shadow: 0 10px 18px 0 rgba(0, 0, 0, 0.3);
+  color: black;
+  max-width: 1250px;
+}
+
+/* All shinywidget buttons */
+.bttn-material-flat {
+  text-transform: none;
+}
+
+/* Add shadows to all boxes */
+.box {
+  box-shadow: 0 3px 6px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* Value boxes - editing the default background colours */
+.widget-user-2 .widget-user-header {
+  background-color: #00bfa5 !important;
+}
+
+.bg-red { 
+  background-color: #ea4335 !important;
+}
+
+.bg-blue { 
+  background-color: #0073b7!important;
+}
+/* Change black value box to white */
+.bg-black { 
+  background-color: #01579b !important;
+  color: rgb(9, 66, 159) !important;
+}
+
+.bg-green {
+  background-color: #007A43 !important;
+}
+
+.bg-topic {
+  background-color: #78909c;
+  font-size: 14px;
+  font-weight: normal;
+  margin-right: 5px;
+}
+
+.bg-topic-highlight {
+  background-color: #2962ff;
+  font-size: 14px;
+  font-weight: normal;
+  margin-right: 5px;
+}
+
+/* small box shadows and word wrap*/
+.small-box  {
+  word-wrap: normal;
+  box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+/* Right alignment */
+.rightAlign{float:right;}
+
+/* Button shadows */
+.btn {
+  border-radius: 10px;
+  width: 100px;
+  height: 40px;
+  border-style: none;
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.btn:hover {
+  box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+/* circle buttons */
+.btn .btn-circle {
+    padding: 20px 20px 20px 20px;
+    font-size: 10px;
+}
+
+/* Gradient buttons */
+.bttn-material-flat.bttn-royal {
+  text-transform: none;
+  background-image: linear-gradient(-30deg, #00bfa5, #ec7a72);
+  color: #FFF;
+}
+
+
+.form-control.selectize-control {
+  padding-left: 0;
+}
+
+#search_container > div:nth-child(4) > div > label, 
+#date_filter > label,
+#search_container > div:nth-child(6) > div > label,
+#search_container > div:nth-child(7) > div > label {
+  font-weight: normal;
+}
+
+#search_container > div:nth-child(4) {
+  padding-left: 0;
+}
+
+#shiny-modal > div > div > div.modal-body > div > div > div.input-group > label > span {
+  height: inherit;
+}

@@ -5,22 +5,21 @@ server <- function(input, output, session){
   v <- reactiveValues(uploaded_pdf_data = uploaded_pdf_data)
   
   # Get data ----
-  get_publications_data_sql <- reactive({
+  get_publications_data_rds <- reactive({
 
     # Get meeting paper was discussed at
-    doc_meetings <- tbl(con, "SAGE_meeting_minutes") %>%
+    doc_meetings <- all_tables[["SAGE_meeting_minutes"]] %>%
       distinct() # just in case duplicate rows have creeped in
 
     # Get document topics and labels
-    doc_topics <- tbl(con, "SAGE_papers_topics") %>%
+    doc_topics <- all_tables[["SAGE_papers_topics"]] %>%
       filter(value > 0.1) %>%
-      inner_join(tbl(con, "SAGE_papers_topic_labels"))
+      inner_join(all_tables[["SAGE_papers_topic_labels"]])
 
     # Get document summaries
-    doc_summaries <- tbl(con, "SAGE_papers_summaries") %>%
+    doc_summaries <- all_tables[["SAGE_papers_summaries"]] %>%
       arrange(index) %>%
       filter(index <= 5) %>%
-      collect() %>%
       mutate(summary_sentence = clean_text(summary_sentence)) %>%
       group_by(pdf_url) %>%
       summarise(summary = str_flatten(summary_sentence, collapse = "</li><li>")) %>%
@@ -31,11 +30,9 @@ server <- function(input, output, session){
              summary = paste0("<ul><li>", summary, "</li></ul>"))
 
     # Join to publications
-    publications_tbl <- tbl(con, "SAGE_papers") %>%
+    publications_tbl <- all_tables[["SAGE_papers"]] %>%
       inner_join(doc_topics, by = c("pdf_url"="document")) %>%
       left_join(doc_meetings, by = "sage_meeting_num") %>%
-      collect() %>%
-      mutate(published_date = lubridate::as_date(published_date)) %>% 
       left_join(doc_summaries, by = "pdf_url")
 
   })
@@ -43,14 +40,13 @@ server <- function(input, output, session){
   # We combine the SQL data with the uploaded data here 
   get_publications_data <- reactive({
     
-    publications_tbl <- get_publications_data_sql() %>%
+    publications_tbl <- get_publications_data_rds() %>%
       mutate(source = "Published")
     
     if(nrow(v$uploaded_pdf_data) > 0){
       
       # Topics 
-      labels <- tbl(con, "SAGE_papers_topic_labels") %>% 
-        collect()
+      labels <- all_tables[["SAGE_papers_topic_labels"]] %>%
     
       new_topics <- map_dfr(v$uploaded_pdf_data$pdf_topics, function(x){
         x %>%
@@ -59,7 +55,7 @@ server <- function(input, output, session){
       })
 
       # Join on new topics 
-      # Then bind on SQL data
+      # Then bind on RDS data
       publications_tbl_new <- v$uploaded_pdf_data %>% 
         inner_join(new_topics, by = c("pdf_url"="document")) 
       
@@ -73,15 +69,15 @@ server <- function(input, output, session){
     
   })
   
-  get_words_data_sql <- reactive({
+  get_words_data_rds <- reactive({
     
     # Get search words
     search_words <- get_search_words()
     
     # Find the docs
-    tbl(con, "SAGE_papers_words") %>% 
-      filter(tolower(word) %in% local(search_words$clean)) %>%
-      collect() 
+    all_tables[["SAGE_papers_words"]] %>%
+      mutate(word = iconv(word, 'UTF-8', 'ASCII')) %>% 
+      filter(tolower(word) %in% local(search_words$clean))
     
   })
   
@@ -90,8 +86,8 @@ server <- function(input, output, session){
     # Get search words
     search_words <- get_search_words()
     
-    # Get SQL table
-    word_tbl <- get_words_data_sql()
+    # Get table loaded earlier from RDS file
+    word_tbl <- get_words_data_rds()
     
     # Bind on data from uploaded PDFs
     if(nrow(v$uploaded_pdf_data) > 0){

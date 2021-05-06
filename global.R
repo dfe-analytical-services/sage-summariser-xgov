@@ -14,10 +14,10 @@ library(shinydashboardPlus)
 library(shinycssloaders)
 library(shinyWidgets)
 library(shinyLP)
-library(DBI) # connecting to sql
-library(dbplyr) # connecting to sql
-library(config) # connecting to sql 
-library(RSQLite)# connecting to sql 
+# library(DBI) # connecting to sql
+# library(dbplyr) # connecting to sql
+# library(config) # connecting to sql 
+# library(RSQLite)# connecting to sql 
 library(glue)
 library(SnowballC)
 library(lubridate)
@@ -43,22 +43,20 @@ library(progress)
 source_out <- sapply(list.files('R/', full.names = TRUE), source)
 
 #--- Connect to SQL: ----
-# SQL connection
-con <- DBI::dbConnect(RSQLite::SQLite(), "data/SAGE_DB.db")
+# Load all tables from RDS file
+all_tables <- readRDS("data/SAGE_tables.rds")
  
 #---- Token parameters ----
 
 # Topic labels
-topic_labels <- tbl(con, "SAGE_papers_topic_labels") %>% 
-  arrange(label) %>% 
-  collect()
+topic_labels <- all_tables[["SAGE_papers_topic_labels"]] %>% 
+  arrange(label) 
 
 # List of meetings
-meeting_list <- tbl(con, "SAGE_papers") %>%
+meeting_list <- all_tables[["SAGE_papers"]] %>%
   distinct(sage_meeting_num) %>%
   filter(!is.na(sage_meeting_num)) %>%
   arrange(desc(sage_meeting_num)) %>%
-  collect() %>%
   mutate(sage_meeting_num = paste0("SAGE ", sage_meeting_num)) %>% 
   pull(sage_meeting_num)
 

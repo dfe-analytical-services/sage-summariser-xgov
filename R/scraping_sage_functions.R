@@ -79,7 +79,7 @@ get_link_data_from_path <- function(path, bow = bow_to_gov()){
     tibble(link_name = link_name,
            last_updated = last_updated, 
            link = link) %>%  
-      mutate(last_updated = as_date(last_updated, format = "%d %B %Y", tz = "GMT"))
+      mutate(last_updated = as_date(last_updated, format = "%d %B %Y"))
   }
   
   # Get links data from meeting sections 
@@ -136,7 +136,7 @@ get_publication_urls <- function(bow = bow_to_gov(), min_date = "2020-01-01"){
       # Get date from name 
       sage_meeting_date = sage_meeting_name %>% 
         str_remove(paste0(sage_meeting_num, ", ")) %>% 
-        as_date(format = "%d %B %Y", tz = "GMT"),
+        as_date(format = "%d %B %Y"),
       # Make meeting number numeric 
       sage_meeting_num = sage_meeting_num %>% 
         str_remove("Meeting ") %>% as.numeric()) 
@@ -386,19 +386,12 @@ summarising_pdf_text <- function(pdf_text, nb_sentences_in_summary = 5,
 # The from scratch upload is simple. Just scrape everything and save 
 # 
 # The day by day process looks like the following:
-# 1) Look at the SQL table for the latest data 
+# 1) Look at the stored RDS files for the latest data 
 # 2) Scrape all data since the latest date (inclusive)
 # 3) Remove anything that has already been saved 
 # 4) Create sub tables  
 # 5) Identify SAGE minutes documents to append it to the SAGE_meeting_minutes table
-# 6) Update SQL tables 
-
-# This function can be used to save data to SQL (either append or overwrite)
-save_to_sqlite <- function(con, data, table, overwrite = FALSE, append = FALSE, field.types = NULL){
-  dbWriteTable(con, name = table,
-               value = data, savemode = "w", row.names = FALSE, overwrite = overwrite, append = append,
-               field.types = field.types) #c(text = "varchar(8000)")
-}
+# 6) Update RDS files 
 
 # This function looks to SQL to get the latest saved papers
 get_latest_saved_papers <- function(con){
@@ -411,11 +404,13 @@ get_latest_saved_papers <- function(con){
 # This function brings everything together to update the SQL datasets
 # Currently rescrape_all won't work properely, as the SQL tables will still 
 # just be appended so I have removed it as a paramter
-update_sage_tables <- function(con, bow = bow_to_gov()){
+update_sage_tables <- function(bow = bow_to_gov()){
   
   update_start_time <- Sys.time()
   
   rescrape_all <- FALSE
+  
+  all_tables <- readRDS("data/SAGE_tables.rds")
   
   topic_model <- readRDS("models/topic_lda_education.rds")
   
@@ -423,7 +418,8 @@ update_sage_tables <- function(con, bow = bow_to_gov()){
   # we scraped is 
   if(!rescrape_all){
     # Look for latest saved
-    latest_saved <- get_latest_saved_papers(con)
+    latest_saved <- all_tables[["SAGE_papers"]] %>% 
+      filter(published_date == max(published_date, na.rm = T)) 
     min_date <- max(latest_saved$published_date)
   } else min_date <- "2020-01-01"
   
@@ -477,7 +473,10 @@ update_sage_tables <- function(con, bow = bow_to_gov()){
     
     SAGE_papers_words <-  new_data %>% 
       select(pdf_url, pdf_words) %>% 
-      unnest(pdf_words)
+      unnest(pdf_words) %>% 
+      group_by(pdf_url, word) %>% 
+      count() %>% 
+      ungroup()
     
     SAGE_papers_topics <- new_data %>% 
       select(pdf_url, pdf_topics) %>% 
@@ -497,19 +496,19 @@ update_sage_tables <- function(con, bow = bow_to_gov()){
       select(sage_meeting_num, 
              corresponding_sage_minutes_landing_page = publication_link)
     
-    # 6) Update SQL tables  
-    save_to_sqlite(con, SAGE_papers %>% mutate(published_date = as.character(published_date)), "SAGE_papers", append = TRUE, field.types = NULL)
-    save_to_sqlite(con, SAGE_papers_text, "SAGE_papers_text", append = TRUE, field.types = c(text = "varchar(8000)"))
-    save_to_sqlite(con, SAGE_papers_words, "SAGE_papers_words", append = TRUE, field.types = NULL)
-    save_to_sqlite(con, SAGE_papers_topics, "SAGE_papers_topics", append = TRUE, field.types = NULL)
-    save_to_sqlite(con, SAGE_meeting_minutes, "SAGE_meeting_minutes", append = TRUE, field.types = NULL)
-    save_to_sqlite(con, SAGE_papers_summaries, "SAGE_papers_summaries", append = TRUE, field.types = NULL)
+    # 6) Update RDS data  
+    all_tables[["SAGE_papers"]] <- bind_rows(all_tables[["SAGE_papers"]], SAGE_papers)
+    all_tables[["SAGE_papers_text"]] <- bind_rows(all_tables[["SAGE_papers_text"]], SAGE_papers_text)
+    all_tables[["SAGE_papers_words"]] <- bind_rows(all_tables[["SAGE_papers_words"]], SAGE_papers_words)
+    all_tables[["SAGE_papers_topics"]] <- bind_rows(all_tables[["SAGE_papers_topics"]], SAGE_papers_topics)
+    all_tables[["SAGE_meeting_minutes"]] <- bind_rows(all_tables[["SAGE_meeting_minutes"]], SAGE_meeting_minutes)
+    all_tables[["SAGE_papers_summaries"]] <- bind_rows(all_tables[["SAGE_papers_summaries"]], SAGE_papers_summaries)
   }
   
   # 7) Update meta table 
   update_end_time <- Sys.time()
-  total_papers = con %>% tbl("SAGE_papers") %>%
-    summarise(n = n()) %>% collect() %>%  pull(n)
+  total_papers = all_tables[["SAGE_papers"]] %>%
+    summarise(n = n()) %>% pull(n)
   SAGE_update_meta <- tibble(update_date = Sys.Date(),
                              update_start_time = update_start_time,
                              update_end_time = update_end_time,
@@ -518,6 +517,7 @@ update_sage_tables <- function(con, bow = bow_to_gov()){
                              num_new_papers = nrow(new_data),
                              num_total_papers = total_papers) %>% 
     mutate(update_start_time = as.character(update_start_time), update_end_time = as.character(update_end_time))
-
-  save_to_sqlite(con, SAGE_update_meta, "SAGE_update_meta", append = TRUE, field.types = NULL)
+  
+  all_tables[["SAGE_update_meta"]] <- bind_rows(all_tables[["SAGE_update_meta"]], SAGE_update_meta)
+  saveRDS(all_tables, "data/SAGE_tables.rds")
 }

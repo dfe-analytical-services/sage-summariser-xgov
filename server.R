@@ -46,7 +46,7 @@ server <- function(input, output, session){
     if(nrow(v$uploaded_pdf_data) > 0){
       
       # Topics 
-      labels <- all_tables[["SAGE_papers_topic_labels"]] %>%
+      labels <- all_tables[["SAGE_papers_topic_labels"]]
     
       new_topics <- map_dfr(v$uploaded_pdf_data$pdf_topics, function(x){
         x %>%
@@ -153,10 +153,8 @@ server <- function(input, output, session){
     
     # Filter by source if necessary
     if (length(input$source_filter) > 0) {
-      
       publication_data <- publication_data %>%
         filter(source %in% input$source_filter)
-      
     }
     
     # Convert labels to html for output
@@ -174,6 +172,7 @@ server <- function(input, output, session){
       ungroup %>%
       filter(published_date >= input$date_filter[1],
              published_date <= input$date_filter[2])
+    # at this point the pdf might not be shown because the 
     
     # Get search words 
     search_words <- get_search_words()

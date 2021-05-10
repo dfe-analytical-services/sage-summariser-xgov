@@ -46,7 +46,7 @@ library(progress)
 source_out <- sapply(list.files('R/', full.names = TRUE), source)
 
 # Run update --------------------------------------------------------------
-update_sage_tables(con)
+update_sage_tables()
 
 
 

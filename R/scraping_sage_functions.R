@@ -515,8 +515,7 @@ update_sage_tables <- function(bow = bow_to_gov()){
                              update_length = as.numeric(update_end_time - update_start_time),
                              update_user = Sys.info()[['user']],
                              num_new_papers = nrow(new_data),
-                             num_total_papers = total_papers) %>% 
-    mutate(update_start_time = as.character(update_start_time), update_end_time = as.character(update_end_time))
+                             num_total_papers = total_papers)
   
   all_tables[["SAGE_update_meta"]] <- bind_rows(all_tables[["SAGE_update_meta"]], SAGE_update_meta)
   saveRDS(all_tables, "data/SAGE_tables.rds")

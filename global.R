@@ -39,6 +39,9 @@ library(lexRankr)
 # Progress bar
 library(progress)
 
+# Deployment
+library(rsconnect)
+
 # Load all functions:
 source_out <- sapply(list.files('R/', full.names = TRUE), source)
 

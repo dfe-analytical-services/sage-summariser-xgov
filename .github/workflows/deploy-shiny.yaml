@@ -29,6 +29,9 @@ jobs:
         with:
           r-version: ${{ matrix.config.r }}
 
+      - name: Install poppler
+        run: brew install poppler
+      
       - name: Restore renv snapshot
         shell: Rscript {0}
         run: |

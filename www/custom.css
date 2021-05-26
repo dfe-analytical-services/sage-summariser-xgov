@@ -121,19 +121,19 @@ blockquote {
 }
 
 .skin-blue .sidebar a {
-  color: #FFF;
+  color: #000000;
   background-color: transparent;
 }
 
 .skin-blue .sidebar-menu>li.active>a {
   background-color: #00bfa5;
-  color: #FFF;
+  color: #000000;
   border-left: #FFF;
 }
 
 .skin-blue .sidebar-menu>li:hover>a {
   background-color: #00bfa5;
-  color: #FFF;
+  color: #000000; /*#FFF;*/
   border-left: #FFF;
 }
 
@@ -145,13 +145,13 @@ blockquote {
 /* logo */
 .skin-blue .main-header .logo {
   background-color: transparent;
-  color: #FFF;
+  color: #000000;
 }
 
 /* logo when hovered */
 .skin-blue .main-header .logo:hover {
-  background-color: #00bfa5;
-  color: #FFFFFF;
+  background-color:  #00bfa5;
+  color: #000000;
 }
 
 
@@ -162,12 +162,12 @@ blockquote {
 
 /* Navbar button thing when hovered */
 .skin-blue .main-header .navbar .sidebar-toggle:hover {
-  background-color: #00bfa5;
-  color: #FFFFFF;
+  background-color:  #00bfa5;
+  color: #000000;
 }
 .skin-blue .main-header .navbar .sidebar-toggle{
   background-color: transparent;
-  color: #FFF;
+  color: #000000;
 }
 
                                 

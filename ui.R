@@ -1,6 +1,9 @@
-dashboardPage(title = "Sage Summariser",
+fluidPage(
+  #use_tota11y(),
+  dashboardPage(title = "Sage Summariser",
               
               # Header
+              #tags$style(HTML(".sidebar-menu li a { font-size: 20px; }")),
               dashboardHeader(title = "Sage Summariser"
               ),
               
@@ -15,7 +18,6 @@ dashboardPage(title = "Sage Summariser",
                                )
               ),
               
-              
               # Main body
               dashboardBody(
                 
@@ -25,7 +27,8 @@ dashboardPage(title = "Sage Summariser",
                   tags$link(rel = "stylesheet", href="https://fonts.googleapis.com/css?family=Domine"),
                   tags$link(rel = "stylesheet", href="https://fonts.googleapis.com/css?family=Roboto"),
                   tags$link(rel = "stylesheet", href="https://fonts.googleapis.com/css?family=Libre Baskerville"),
-                  tags$link(rel = "stylesheet", href="https://fonts.googleapis.com/css?family=Open Sans")
+                  tags$link(rel = "stylesheet", href="https://fonts.googleapis.com/css?family=Open Sans"),
+                  tags$style(HTML(".sidebar-menu li a { font-size: 20px;}"))
                 ),
                 
                 # Tabs
@@ -48,10 +51,10 @@ dashboardPage(title = "Sage Summariser",
                                    br(),
                                    jumbotron(header = h1("SAGE Summariser",
                                                          style = "color: #FFF;"), #img(src='logo.png', width = 100)
-                                             content = list(p("Your gateway to The Science",
+                                             content = list(h2("Your gateway to The Science",
                                                               style = "color: #FFF;"),
                                                             br(),
-                                                            actionBttn("getStarted", "Get started")),
+                                                            actionBttn("getStarted", "Get started", size = "lg")),
                                              button = FALSE)
                                    
                             )
@@ -129,5 +132,5 @@ dashboardPage(title = "Sage Summariser",
                 )
               )
 )
-                
+)                
   

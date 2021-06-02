@@ -431,6 +431,18 @@ update_sage_tables <- function(bow = bow_to_gov()){
   new_data <- new_data %>% 
     filter(!pdf_url %in% latest_saved$pdf_url)
   
+  # additional filter here for the rare instances
+  # where a link to a pdf doesn't contain the .pdf extension.
+  # This can happen for external publications. At the moment
+  # this generates an error on the x-gov version 
+  # further down the code workflow because it returns an empty
+  # tibble when extracting text. A better way of checking whether we truly have a pdf
+  # is HEAD(url) %>% .$headers$`content-type` rather than checking extension
+  # We don't get an error in the DfE version (because of newer package versions on x-gov)
+  # but these papers don't get displayed still as they don't have summaries or topics
+  new_data <- new_data %>% 
+    filter(!((tools::file_ext(pdf_url)) == "" & str_sub(pdf_url, 1, 18) != "https://www.gov.uk"))
+  
   # Here we check if there are any docs to add. 
   # If there aren't we skip all the rest of the steps
   if(nrow(new_data) != 0){

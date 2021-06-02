@@ -38,6 +38,22 @@ jobs:
           if (!require('renv')) install.packages('renv')
           renv::restore()
           
+      # Scrape and process new SAGE publications
+      - name: Scrape
+        run: Rscript update_sage_data.R
+        
+      # Add new files in data folder, commit along with other modified files, push
+      - name: Commit files
+        run: |
+          git config --local user.name github-actions
+          git config --local user.email "actions@github.com"
+          git add data/SAGE_tables.rds
+          git commit -am "GH ACTION Autorun $(date)"
+          git push origin main
+        env:
+          REPO_KEY: ${{secrets.GITHUB_TOKEN}}
+          username: github-actions
+          
       - name: Push to shiny.io
         run: >
           Rscript

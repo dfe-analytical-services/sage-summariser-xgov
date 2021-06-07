@@ -1,6 +1,6 @@
 on:
   schedule:
-    - cron: '15 * * * *'
+    - cron: '15 08 * * 2'
 # runs every Monday at mid-day
 
 name: deploy-shiny
@@ -47,6 +47,7 @@ jobs:
         run: |
           git config --local user.name github-actions
           git config --local user.email "actions@github.com"
+          git pull origin main
           git add data/SAGE_tables.rds
           git commit -am "GH ACTION Autorun $(date)"
           git push origin main

@@ -1,7 +1,7 @@
 on:
   schedule:
-    - cron: '0 11 * * 1'
-# runs every Monday at 11am
+    - cron: '0 12 * * 1'
+# runs every Monday at mid-day
 
 name: deploy-shiny
 

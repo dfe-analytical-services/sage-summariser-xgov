@@ -1,7 +1,9 @@
 on:
+  # can trigger the workflow manually
+  workflow_dispatch:
+  # also runs on schedule, every Tuesday at 8.15am
   schedule:
     - cron: '15 08 * * 2'
-# runs every Monday at mid-day
 
 name: deploy-shiny
 

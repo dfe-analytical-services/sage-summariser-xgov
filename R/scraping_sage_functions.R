@@ -449,19 +449,33 @@ update_sage_tables <- function(bow = bow_to_gov()){
     
     # 4) Create sub tables 
     # Extract text 
-    message("Exracting text from PDFs...")
+    message("Extracting text from PDFs...")
     pb <- progress_bar$new(total = nrow(new_data))
     new_data <- new_data %>% 
       mutate(pdf_text = map(pdf_url, extracting_pdf_text, pb = pb))
     
+    # In some very rare occasions, we can have empty strings
+    # in the text column at this stage.
+    # This happens in webpages where the right
+    # html tag could not be found and so no text was extracted.
+    missing_text <- new_data %>% 
+      select(pdf_text) %>%
+      unnest() %>%
+      group_by(pdf_url) %>%
+      summarise(nb_page = n(), nb_empty_string = sum(text == "")) %>% 
+      filter(nb_page == 1 & nb_page == nb_empty_string)
+    
+    new_data <- new_data %>% 
+      anti_join(missing_text %>% select(pdf_url), by = "pdf_url") 
+    
     # Extract words from text 
-    message("Exracting words from PDF text...")
+    message("Extracting words from PDF text...")
     pb <- progress_bar$new(total = nrow(new_data))
     new_data <- new_data %>% 
       mutate(pdf_words = map(pdf_text, get_pdf_words, stop_words = stop_words, pb = pb))
     
     # Extract topics from text  
-    message("Exracting topics from PDF text...") 
+    message("Extracting topics from PDF text...") 
     pb <- progress_bar$new(total = nrow(new_data))
     new_data <- new_data %>% 
       mutate(pdf_topics = map(pdf_text, get_pdf_topic, topic_lda = topic_model, pb = pb))

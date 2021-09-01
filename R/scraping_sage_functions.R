@@ -454,13 +454,23 @@ update_sage_tables <- function(bow = bow_to_gov()){
     new_data <- new_data %>% 
       mutate(pdf_text = map(pdf_url, extracting_pdf_text, pb = pb))
     
-    # In some very rare occasions, we can have empty strings
-    # in the text column at this stage.
-    # This happens in webpages where the right
-    # html tag could not be found and so no text was extracted.
+    # Some document don't have a data structure at all in pdf_text. This happens
+    # when the document is a web page and the right html tag couldn't be found.
+    # When unnesting, they just drop out so we can use that to remove them
+    # altogether. 
+    new_data_with_extracted_text <- new_data %>% 
+      select(permanent_pdf_url = pdf_url, pdf_text) %>%
+      unnest(cols = pdf_text) %>%
+      distinct(permanent_pdf_url)
+    
+    new_data <- new_data %>% 
+      inner_join(new_data_with_extracted_text, by = c("pdf_url" = "permanent_pdf_url"))
+    
+    # Over time and in some rare situations we can have empty strings
+    # in the text column at this stage. Remove these. 
     missing_text <- new_data %>% 
       select(pdf_text) %>%
-      unnest() %>%
+      unnest(cols = pdf_text) %>%
       group_by(pdf_url) %>%
       summarise(nb_page = n(), nb_empty_string = sum(text == "")) %>% 
       filter(nb_page == 1 & nb_page == nb_empty_string)

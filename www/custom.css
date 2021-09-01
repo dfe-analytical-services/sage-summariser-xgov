@@ -176,7 +176,7 @@ blockquote {
   /* background-image: linear-gradient(#f02731, #00bfa5); */
   background-color: #00695c;
   box-shadow: 0 10px 18px 0 rgba(0, 0, 0, 0.3);
-  color: black;
+  /*color: black;*/
   max-width: 1250px;
 }
 

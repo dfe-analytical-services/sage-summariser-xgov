@@ -128,6 +128,12 @@ server <- function(input, output, session){
                    selected = "search")
   })
   
+  observeEvent(input$tabs, { 
+    if (input$tabs == "accessibility") {
+      updateTabItems(session, "tabs", "accessibility")
+    }
+  })
+  
   # ---- Search page ----
   
   # ** Render search results ----
@@ -219,11 +225,11 @@ server <- function(input, output, session){
     filtered_data %>% 
       mutate(Title = ifelse(is.na(pdf_url), 
                             glue("<h3 style = 'margin-bottom: 0;'>{pdf_name}</h3>"),
-                            glue("<h3 style = 'margin-bottom: 0;'><a href='{pdf_url}' target='_blank'>{pdf_name}</a></h3>")),
+                            glue("<h3 style = 'margin-bottom: 0; font-size:34px; color: #000000;'><a href='{pdf_url}' target='_blank'>{pdf_name}</a></h3>")),
              Content = paste0(Title,
                               ifelse(is.na(publication_link), 
                                      "<br>",
-                                     glue("<div style = 'margin-bottom: 10px; font-size:14px;'><a href='{publication_link}' target='_blank'>{publication_link}</a></div>")),
+                                     glue("<div style = 'margin-bottom: 10px; font-size:18px;'><a href='{publication_link}' target='_blank'>{publication_link}</a></div>")),
                               labels_html,
                               "<br>",
                               "<b>Source</b><br>", source,

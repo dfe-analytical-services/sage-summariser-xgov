@@ -29,7 +29,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r@master
         with:
-          r-version: ${{ matrix.config.r }}
+          r-version: '4.1.1'
 
       - name: Install poppler
         run: brew install poppler

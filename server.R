@@ -21,6 +21,10 @@ server <- function(input, output, session){
       arrange(index) %>%
       filter(index <= 5) %>%
       mutate(summary_sentence = clean_text(summary_sentence)) %>%
+      distinct() %>% 
+      mutate(summary_sentence_short = stringr::str_trunc(summary_sentence, 500)) %>% 
+      mutate(summary_sentence = if_else(nchar(summary_sentence) > 500,
+             summary_sentence_short, summary_sentence)) %>% 
       group_by(pdf_url) %>%
       summarise(summary = str_flatten(summary_sentence, collapse = "</li><li>")) %>%
       ungroup() %>%
@@ -141,6 +145,7 @@ server <- function(input, output, session){
     
     # Get all data, filter by date
     publication_data <- get_publications_data()
+    #browser()
     
     # Filter by topic if necessary
     if (length(input$topic_filter) > 0) {
@@ -166,6 +171,7 @@ server <- function(input, output, session){
     # Convert labels to html for output
     # Filter by date
     publication_data <- publication_data %>%
+      distinct() %>% 
       mutate(topic_class = ifelse(label %in% input$topic_filter,
                                   "bg-topic-highlight",
                                   "bg-topic"),
@@ -173,9 +179,10 @@ server <- function(input, output, session){
       group_by(source, publication_link, published_date, pdf_name, pdf_url, publication_type, summary,
                corresponding_sage_minutes_landing_page, sage_meeting_num) %>%
       summarise(main_topic = label[which.max(value)],
-                labels_html = paste(label, collapse = "</p>")) %>%
+                labels_html = paste(unique(label), collapse = "</p>")) %>%
       mutate(labels_html = paste0("<div style = 'line-height: 200%;'>", labels_html, "</p></div>")) %>%
       ungroup %>%
+      distinct() %>% 
       filter(published_date >= input$date_filter[1],
              published_date <= input$date_filter[2])
     # at this point the pdf might not be shown because the 
@@ -222,6 +229,7 @@ server <- function(input, output, session){
     )
     
     # Convert title into html so it can be a hyperlink
+    #browser()
     filtered_data %>% 
       mutate(Title = ifelse(is.na(pdf_url), 
                             glue("<h3 style = 'margin-bottom: 0;'>{pdf_name}</h3>"),
@@ -259,6 +267,8 @@ server <- function(input, output, session){
                                    lengthChange = TRUE
                                    )
       )
+    # filtered_data %>% filter(stringr::str_detect(pdf_name, "PHE: Serological surveillance"), sage_meeting_num == 36) %>%
+    # select(labels_html) %>% slice(1) %>% pull()
     
   })
   

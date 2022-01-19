@@ -304,7 +304,9 @@ summarising_pdf_text <- function(pdf_text, nb_sentences_in_summary = 5,
   if(!is.null(pb)) pb$tick()
   
   # If the pdf_text table is empty, we just return an empty table
-  if(nrow(pdf_text) == 0) return(tibble(.rows = 0))
+  if(nrow(pdf_text) == 0){
+    return(tibble(.rows = 0))
+  }
   
   # Read in the full text
   full_text <- pdf_text$text %>% 
@@ -325,6 +327,12 @@ summarising_pdf_text <- function(pdf_text, nb_sentences_in_summary = 5,
   
   # Run TextRank to rank representative sentences
   nb_sentences <- nrow(sentence_df)
+  
+  # Deal with instances where nrow(pdf_text) == 1
+  # but the pdf_text$text field is the empty string ""
+  if(nb_sentences == 0){
+    return(tibble(.rows = 0))
+  }
   
   # If there are fewer sentences in the whole text
   # than we want in the whole summary, we keep everything
@@ -445,7 +453,7 @@ update_sage_tables <- function(bow = bow_to_gov()){
   
   # Here we check if there are any docs to add. 
   # If there aren't we skip all the rest of the steps
-  if(nrow(new_data) != 0){
+  if(nrow(new_data) > 0){
     
     # 4) Create sub tables 
     # Extract text 
@@ -457,7 +465,8 @@ update_sage_tables <- function(bow = bow_to_gov()){
     # Some document don't have a data structure at all in pdf_text. This happens
     # when the document is a web page and the right html tag couldn't be found.
     # When unnesting, they just drop out so we can use that to remove them
-    # altogether. 
+    # altogether. However sometimes there is actually no records with text
+    # in them. 
     new_data_with_extracted_text <- new_data %>% 
       select(permanent_pdf_url = pdf_url, pdf_text) %>%
       unnest(cols = pdf_text) %>%
@@ -466,79 +475,87 @@ update_sage_tables <- function(bow = bow_to_gov()){
     new_data <- new_data %>% 
       inner_join(new_data_with_extracted_text, by = c("pdf_url" = "permanent_pdf_url"))
     
-    # Over time and in some rare situations we can have empty strings
-    # in the text column at this stage. Remove these. 
-    missing_text <- new_data %>% 
-      select(pdf_text) %>%
-      unnest(cols = pdf_text) %>%
-      group_by(pdf_url) %>%
-      summarise(nb_page = n(), nb_empty_string = sum(text == "")) %>% 
-      filter(nb_page == 1 & nb_page == nb_empty_string)
+    if(nrow(new_data) > 0){
+      
+      # Over time and in some rare situations we can have empty strings
+      # in the text column at this stage. Remove these. 
+      missing_text <- new_data %>% 
+        select(pdf_text) %>%
+        unnest(cols = pdf_text) %>%
+        group_by(pdf_url) %>%
+        summarise(nb_page = n(), nb_empty_string = sum(text == "")) %>% 
+        filter(nb_page == 1 & nb_page == nb_empty_string)
+      
+      new_data <- new_data %>% 
+        anti_join(missing_text %>% select(pdf_url), by = "pdf_url") 
+    }
     
-    new_data <- new_data %>% 
-      anti_join(missing_text %>% select(pdf_url), by = "pdf_url") 
-    
-    # Extract words from text 
-    message("Extracting words from PDF text...")
-    pb <- progress_bar$new(total = nrow(new_data))
-    new_data <- new_data %>% 
-      mutate(pdf_words = map(pdf_text, get_pdf_words, stop_words = stop_words, pb = pb))
-    
-    # Extract topics from text  
-    message("Extracting topics from PDF text...") 
-    pb <- progress_bar$new(total = nrow(new_data))
-    new_data <- new_data %>% 
-      mutate(pdf_topics = map(pdf_text, get_pdf_topic, topic_lda = topic_model, pb = pb))
-    
-    # Extract summaries from text 
-    message("Summarising PDF text...") 
-    pb <- progress_bar$new(total = nrow(new_data) + 1) # The +1 is because the summarising can take a while so we want the PB to remain for the final summarising
-    new_data <- new_data %>% 
-      mutate(pdf_summaries = map(pdf_text, summarising_pdf_text, pb = pb))
-    
-    # Create the tables ready to append 
-    SAGE_papers <- new_data %>% 
-      select(publication_link:publication_type) %>% 
-      mutate(publication_link = paste0("https://www.gov.uk", publication_link),
-             pdf_name = clean_text(pdf_name)) 
-    
-    SAGE_papers_text <- new_data %>% 
-      select(pdf_url, pdf_text) %>% 
-      mutate(pdf_text = map(pdf_text, ~.x %>% select(-pdf_url))) %>%  # Removing the temporary url
-      unnest(pdf_text)
-    
-    SAGE_papers_words <-  new_data %>% 
-      select(pdf_url, pdf_words) %>% 
-      unnest(pdf_words) %>% 
-      group_by(pdf_url, word) %>% 
-      count() %>% 
-      ungroup()
-    
-    SAGE_papers_topics <- new_data %>% 
-      select(pdf_url, pdf_topics) %>% 
-      unnest(pdf_topics) %>% 
-      select(-document) %>% 
-      rename(document = pdf_url)
-    
-    SAGE_papers_summaries <- new_data %>% 
-      select(pdf_url, pdf_summaries) %>% 
-      unnest(pdf_summaries) %>%  
-      select(index, summary_sentence, pdf_url, total_nb_sentences) %>% 
-      mutate(summary_sentence = clean_text(summary_sentence))
-    
-    # 5) Identify SAGE minutes
-    SAGE_meeting_minutes <- SAGE_papers %>% 
-      filter(str_detect(pdf_name, "SAGE [0-9]{1,3} minutes")) %>% 
-      select(sage_meeting_num, 
-             corresponding_sage_minutes_landing_page = publication_link)
-    
-    # 6) Update RDS data  
-    all_tables[["SAGE_papers"]] <- bind_rows(all_tables[["SAGE_papers"]], SAGE_papers)
-    all_tables[["SAGE_papers_text"]] <- bind_rows(all_tables[["SAGE_papers_text"]], SAGE_papers_text)
-    all_tables[["SAGE_papers_words"]] <- bind_rows(all_tables[["SAGE_papers_words"]], SAGE_papers_words)
-    all_tables[["SAGE_papers_topics"]] <- bind_rows(all_tables[["SAGE_papers_topics"]], SAGE_papers_topics)
-    all_tables[["SAGE_meeting_minutes"]] <- bind_rows(all_tables[["SAGE_meeting_minutes"]], SAGE_meeting_minutes)
-    all_tables[["SAGE_papers_summaries"]] <- bind_rows(all_tables[["SAGE_papers_summaries"]], SAGE_papers_summaries)
+    # At this stage we need to check again whether we have some data
+    # at all. If not we can skip all the extracting steps
+    if(nrow(new_data) > 0){
+      
+      # Extract words from text 
+      message("Extracting words from PDF text...")
+      pb <- progress_bar$new(total = nrow(new_data))
+      new_data <- new_data %>% 
+        mutate(pdf_words = map(pdf_text, get_pdf_words, stop_words = stop_words, pb = pb))
+      
+      # Extract topics from text  
+      message("Extracting topics from PDF text...") 
+      pb <- progress_bar$new(total = nrow(new_data))
+      new_data <- new_data %>% 
+        mutate(pdf_topics = map(pdf_text, get_pdf_topic, topic_lda = topic_model, pb = pb))
+      
+      # Extract summaries from text 
+      message("Summarising PDF text...") 
+      pb <- progress_bar$new(total = nrow(new_data) + 1) # The +1 is because the summarising can take a while so we want the PB to remain for the final summarising
+      new_data <- new_data %>% 
+        mutate(pdf_summaries = map(pdf_text, summarising_pdf_text, pb = pb))
+      
+      # Create the tables ready to append 
+      SAGE_papers <- new_data %>% 
+        select(publication_link:publication_type) %>% 
+        mutate(publication_link = paste0("https://www.gov.uk", publication_link),
+               pdf_name = clean_text(pdf_name)) 
+      
+      SAGE_papers_text <- new_data %>% 
+        select(pdf_url, pdf_text) %>% 
+        mutate(pdf_text = map(pdf_text, ~.x %>% select(-pdf_url))) %>%  # Removing the temporary url
+        unnest(pdf_text)
+      
+      SAGE_papers_words <-  new_data %>% 
+        select(pdf_url, pdf_words) %>% 
+        unnest(pdf_words) %>% 
+        group_by(pdf_url, word) %>% 
+        count() %>% 
+        ungroup()
+      
+      SAGE_papers_topics <- new_data %>% 
+        select(pdf_url, pdf_topics) %>% 
+        unnest(pdf_topics) %>% 
+        select(-document) %>% 
+        rename(document = pdf_url)
+      
+      SAGE_papers_summaries <- new_data %>% 
+        select(pdf_url, pdf_summaries) %>% 
+        unnest(pdf_summaries) %>%  
+        select(index, summary_sentence, pdf_url, total_nb_sentences) %>% 
+        mutate(summary_sentence = clean_text(summary_sentence))
+      
+      # 5) Identify SAGE minutes
+      SAGE_meeting_minutes <- SAGE_papers %>% 
+        filter(str_detect(pdf_name, "SAGE [0-9]{1,3} minutes")) %>% 
+        select(sage_meeting_num, 
+               corresponding_sage_minutes_landing_page = publication_link)
+      
+      # 6) Update RDS data  
+      all_tables[["SAGE_papers"]] <- bind_rows(all_tables[["SAGE_papers"]], SAGE_papers)
+      all_tables[["SAGE_papers_text"]] <- bind_rows(all_tables[["SAGE_papers_text"]], SAGE_papers_text)
+      all_tables[["SAGE_papers_words"]] <- bind_rows(all_tables[["SAGE_papers_words"]], SAGE_papers_words)
+      all_tables[["SAGE_papers_topics"]] <- bind_rows(all_tables[["SAGE_papers_topics"]], SAGE_papers_topics)
+      all_tables[["SAGE_meeting_minutes"]] <- bind_rows(all_tables[["SAGE_meeting_minutes"]], SAGE_meeting_minutes)
+      all_tables[["SAGE_papers_summaries"]] <- bind_rows(all_tables[["SAGE_papers_summaries"]], SAGE_papers_summaries)
+    }
   }
   
   # 7) Update meta table 

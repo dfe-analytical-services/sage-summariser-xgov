@@ -1,6 +1,25 @@
 
 server <- function(input, output, session){
   
+  
+  showModal(
+    modalDialog(
+      title = NULL,
+      
+      fluidPage(
+        align = "center",
+        p("SAGE no longer meet on Covid issues. The SAGE summariser remains up
+          and running as a knowledge base but its data is no longer updated."),
+        actionBttn("dismiss", "Dismiss", style = "material-flat")
+      ),
+      
+      footer = NULL,
+      easyClose = FALSE
+    )
+  )
+  
+  observeEvent(input$dismiss, removeModal())
+  
   # Set reactive values
   v <- reactiveValues(uploaded_pdf_data = uploaded_pdf_data)
   

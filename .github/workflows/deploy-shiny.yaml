@@ -1,7 +1,7 @@
 on:
-  push:
-    branches: 
-      - main
+  # push:
+  #  branches: 
+  #    - main
   # can trigger the workflow manually
   workflow_dispatch:
   # also runs on schedule, every Tuesday at 8.15am
@@ -44,8 +44,10 @@ jobs:
           renv::restore()
           
       # Scrape and process new SAGE publications
-      - name: Scrape
-        run: Rscript update_sage_data.R
+      # Uncomment to scrape when deploying. Without it
+      # only changes to the app itself will be deployed
+      # - name: Scrape
+      #   run: Rscript update_sage_data.R
         
       # Add new files in data folder, commit along with other modified files, push
       - name: Commit files

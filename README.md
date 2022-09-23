@@ -1,4 +1,7 @@
 # sage-summariser-xgov
+## Important update (Autumn 2022)
+Members of SAGE no longer meet to discuss Covid issues and new papers have stopped being published on the dedicated gov.uk webpage. In this context, the SAGE summariser application will remain up and running for use as a knowledge base, but active development has ceased and its underlying data is no longer added to. 
+
 ## Overview
 The SAGE summariser is a search engine for papers discussed at meetings of the Scientific Advisory Group for Emergencies (SAGE) and published on gov.uk 
 (https://www.gov.uk/government/collections/scientific-evidence-supporting-the-government-response-to-coronavirus-covid-19). 
@@ -15,10 +18,6 @@ From https://department-for-education.shinyapps.io/sage-summariser-xgov/, users 
 * Search papers by themes
 * Consult summaries (i.e. example sentences that are representative of the overall content)
 * Upload and process papers stored on their local machine (these are not added to the database and are available to the user for the duration of their current session only)
-
-## Updating process
-Currently the summariser checks for new publications on a weekly basis (on Tuesdays). This means new content may not be immediately picked up as it is published. 
-While daily updates would have been preferable, this was a trade-off we had to make because of Github's limitations in terms of data storage.  
 
 ## Machine Learning
 The app uses topic modelling to automatically generate theme labels for each paper. Example sentences are selected using extractive summarising relying
